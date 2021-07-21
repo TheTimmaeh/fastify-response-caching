@@ -195,3 +195,28 @@ test('should not waiting for cache due to timeout', (t) => {
     t.deepEqual(response2.data, {hello: 'world'})
   })
 })
+
+test('should keep the original content type', (t) => {
+  t.plan(6)
+  const instance = fastify()
+  instance.register(plugin, {ttl: 1000})
+  instance.get('/contentType', (req, res) => {
+    res.send({hello: 'world'})
+  })
+  instance.listen(0, async (err) => {
+    if (err) t.threw(err)
+    instance.server.unref()
+    const portNum = instance.server.address().port
+    const address = `http://127.0.0.1:${portNum}/contentType`
+    const [response1, response2] = await Promise.all([
+      axios.get(address),
+      axios.get(address),
+    ])
+    t.is(response1.status, 200)
+    t.is(response2.status, 200)
+    t.is(response1.headers['content-type'], 'application/json; charset=utf-8')
+    t.is(response2.headers['content-type'], 'application/json; charset=utf-8')
+    t.deepEqual(response1.data, {hello: 'world'})
+    t.deepEqual(response2.data, {hello: 'world'})
+  })
+})

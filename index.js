@@ -66,7 +66,7 @@ function createOnRequestHandler({ttl, additionalCondition: {headers}}) {
         const cached = JSON.parse(cachedString)
         res.header(X_RESPONSE_CACHE, X_RESPONSE_CACHE_HIT)
 
-        return res.code(cached.statusCode).send(cached.payload)
+        return res.code(cached.statusCode).header('Content-Type', cached.contentType).send(cached.payload)
       } else {
         res.header(X_RESPONSE_CACHE, X_RESPONSE_CACHE_MISS)
       }
@@ -91,6 +91,7 @@ function createOnSendHandler({ttl, additionalCondition: {headers}}) {
       key,
       JSON.stringify({
         statusCode: res.statusCode,
+        contentType: res.getHeader('Content-Type'),
         payload,
       }),
       ttl,
